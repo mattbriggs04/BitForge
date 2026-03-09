@@ -109,8 +109,12 @@ func (s *Server) handleCreateSubmission(w http.ResponseWriter, r *http.Request) 
 		UserHandle:  userHandle,
 	})
 	if err != nil {
-		if strings.Contains(err.Error(), "required") || strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "must be") || strings.Contains(err.Error(), "supported") {
-			writeError(w, http.StatusBadRequest, err.Error())
+		if appErr, ok := service.AsAppError(err); ok {
+			status := http.StatusBadRequest
+			if appErr.Kind == service.ErrorKindNotFound {
+				status = http.StatusNotFound
+			}
+			writeError(w, status, appErr.Message)
 			return
 		}
 		log.Printf("create submission error: %v", err)
@@ -153,7 +157,18 @@ func (s *Server) withMiddleware(next http.Handler) http.Handler {
 		}
 
 		start := time.Now()
-		next.ServeHTTP(w, r)
-		log.Printf("%s %s %s", r.Method, r.URL.Path, time.Since(start))
+		recorder := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
+		next.ServeHTTP(recorder, r)
+		log.Printf("%s %s %d %s", r.Method, r.URL.Path, recorder.status, time.Since(start))
 	})
+}
+
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (r *statusRecorder) WriteHeader(status int) {
+	r.status = status
+	r.ResponseWriter.WriteHeader(status)
 }

@@ -442,17 +442,16 @@ select {
   margin-top: 0;
 }
 
-.solve-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.8rem;
-}
-
 .solve-actions {
   display: flex;
   gap: 0.52rem;
   flex-wrap: wrap;
+}
+
+.solve-actions-footer {
+  justify-content: flex-end;
+  margin-top: 0.55rem;
+  margin-bottom: 0.35rem;
 }
 
 .editor-wrap {
@@ -780,9 +779,12 @@ select {
   }
 
   .catalog-header,
-  .problem-page-head,
-  .solve-header {
+  .problem-page-head {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .solve-actions-footer {
+    justify-content: flex-start;
   }
 }

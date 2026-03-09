@@ -159,31 +159,6 @@ export function ProblemWorkbench({ problem }: Props) {
 
   return (
     <section className="solve-section">
-      <div className="solve-header">
-        <h2>Solve</h2>
-        <div className="solve-actions">
-          <button className="btn btn-muted" type="button" onClick={() => setCode(defaultTemplate?.starterCode ?? "")}>
-            Reset Starter
-          </button>
-          <button
-            className="btn btn-muted"
-            type="button"
-            disabled={isSubmitting || inFlight}
-            onClick={() => void startSubmission("run")}
-          >
-            Run Samples
-          </button>
-          <button
-            className="btn btn-primary"
-            type="button"
-            disabled={isSubmitting || inFlight}
-            onClick={() => void startSubmission("submit")}
-          >
-            Submit
-          </button>
-        </div>
-      </div>
-
       <div className="editor-wrap">
         <MonacoEditor
           height="640px"
@@ -203,6 +178,27 @@ export function ProblemWorkbench({ problem }: Props) {
       </div>
 
       {defaultTemplate?.notes ? <p className="template-note">Template note: {defaultTemplate.notes}</p> : null}
+      <div className="solve-actions solve-actions-footer">
+        <button className="btn btn-muted" type="button" onClick={() => setCode(defaultTemplate?.starterCode ?? "")}>
+          Reset Starter
+        </button>
+        <button
+          className="btn btn-muted"
+          type="button"
+          disabled={isSubmitting || inFlight}
+          onClick={() => void startSubmission("run")}
+        >
+          Run Samples
+        </button>
+        <button
+          className="btn btn-primary"
+          type="button"
+          disabled={isSubmitting || inFlight}
+          onClick={() => void startSubmission("submit")}
+        >
+          Submit
+        </button>
+      </div>
 
       <section className="judge-terminal" aria-live="polite">
         <div className="judge-terminal-head">

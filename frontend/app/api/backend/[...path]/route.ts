@@ -9,6 +9,33 @@ type RouteContext = {
   params: Promise<{ path: string[] }>;
 };
 
+async function sleep(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchUpstreamWithRetry(url: string, init: RequestInit): Promise<Response> {
+  const attempts = 3;
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetch(url, init);
+      if (response.status >= 500 && attempt < attempts) {
+        await sleep(100 * attempt);
+        continue;
+      }
+      return response;
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) {
+        await sleep(100 * attempt);
+      }
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error("upstream fetch failed");
+}
+
 async function proxy(request: NextRequest, context: RouteContext): Promise<Response> {
   const { path } = await context.params;
   const endpointPath = path.join("/");
@@ -27,12 +54,17 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<Respo
   const method = request.method.toUpperCase();
   const body = method === "GET" || method === "HEAD" ? undefined : await request.text();
 
-  const upstream = await fetch(targetURL.toString(), {
-    method,
-    headers,
-    body,
-    cache: "no-store",
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetchUpstreamWithRetry(targetURL.toString(), {
+      method,
+      headers,
+      body,
+      cache: "no-store",
+    });
+  } catch {
+    return Response.json({ error: "backend unavailable, retry shortly" }, { status: 503 });
+  }
 
   return new Response(upstream.body, {
     status: upstream.status,

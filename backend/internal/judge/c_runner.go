@@ -56,12 +56,13 @@ func (r *CAssertRunner) Evaluate(ctx context.Context, req Request) (model.JudgeR
 	defer cancelCompile()
 	compileCmd := exec.CommandContext(compileCtx, compiler, compileArgs...)
 	compileOutput, compileErr := compileCmd.CombinedOutput()
+	formattedCompileOutput := truncateOutput(formatCompileOutput(string(compileOutput), sourcePath, workingDir))
 	if compileCtx.Err() == context.DeadlineExceeded {
 		return model.JudgeResult{
 			Status:        "completed",
 			Verdict:       "compile_error",
 			ErrorMessage:  "compilation timed out",
-			CompileOutput: truncateOutput(string(compileOutput)),
+			CompileOutput: formattedCompileOutput,
 			Results:       defaultErrorResults(req.Cases, "compile step did not finish"),
 		}, nil
 	}
@@ -69,7 +70,7 @@ func (r *CAssertRunner) Evaluate(ctx context.Context, req Request) (model.JudgeR
 		return model.JudgeResult{
 			Status:        "completed",
 			Verdict:       "compile_error",
-			CompileOutput: truncateOutput(string(compileOutput)),
+			CompileOutput: formattedCompileOutput,
 			Results:       defaultErrorResults(req.Cases, "compilation failed"),
 		}, nil
 	}
@@ -79,12 +80,13 @@ func (r *CAssertRunner) Evaluate(ctx context.Context, req Request) (model.JudgeR
 	runCmd := exec.CommandContext(runCtx, binaryPath)
 	runOutputBytes, runErr := runCmd.CombinedOutput()
 	runOutput := string(runOutputBytes)
+	formattedRuntimeOutput := truncateOutput(formatRuntimeOutput(runOutput))
 
 	if runCtx.Err() == context.DeadlineExceeded {
 		return model.JudgeResult{
 			Status:        "completed",
 			Verdict:       "runtime_error",
-			RuntimeOutput: truncateOutput(runOutput),
+			RuntimeOutput: formattedRuntimeOutput,
 			ErrorMessage:  "execution timed out",
 			Results:       defaultErrorResults(req.Cases, "execution timed out"),
 			TotalTests:    len(req.Cases),
@@ -134,7 +136,7 @@ func (r *CAssertRunner) Evaluate(ctx context.Context, req Request) (model.JudgeR
 		Score:         score,
 		TotalTests:    total,
 		PassedTests:   passed,
-		RuntimeOutput: truncateOutput(runOutput),
+		RuntimeOutput: formattedRuntimeOutput,
 		ErrorMessage:  errMessage,
 		Results:       parsed,
 	}, nil
@@ -157,8 +159,12 @@ func buildHarness(userSource string, cases []model.JudgeTestCase, cfg map[string
 		}
 		builder.WriteString("\n")
 	}
+	builder.WriteString("#line 1 \"solution.c\"\n")
 	builder.WriteString(userSource)
-	builder.WriteString("\n\n")
+	if !strings.HasSuffix(userSource, "\n") {
+		builder.WriteString("\n")
+	}
+	builder.WriteString("\n#line 1 \"harness.c\"\n\n")
 	builder.WriteString("int main(void) {\n")
 	builder.WriteString("    int __passed = 0;\n")
 	builder.WriteString("\n")
@@ -191,6 +197,8 @@ func buildHarness(userSource string, cases []model.JudgeTestCase, cfg map[string
 }
 
 var harnessLineRegex = regexp.MustCompile(`^CASE\|(\d+)\|([^|]+)\|(PASS|FAIL)$`)
+var harnessSummaryLineRegex = regexp.MustCompile(`^SUMMARY\|(\d+)\|(\d+)$`)
+var submissionPathRegex = regexp.MustCompile(`(?:[A-Za-z]:)?[/\\][^:\n]*[/\\]submission\.c`)
 
 func parseHarnessOutput(output string, cases []model.JudgeTestCase) []model.SubmissionTestResult {
 	results := make([]model.SubmissionTestResult, len(cases))
@@ -288,6 +296,43 @@ func sanitizeCaseName(input string) string {
 		return "unnamed_case"
 	}
 	return input
+}
+
+func formatCompileOutput(output, sourcePath, workingDir string) string {
+	formatted := output
+	if sourcePath != "" {
+		formatted = strings.ReplaceAll(formatted, sourcePath, "solution.c")
+	}
+	if workingDir != "" {
+		prefix := filepath.Clean(workingDir) + string(os.PathSeparator)
+		formatted = strings.ReplaceAll(formatted, prefix, "")
+	}
+	// Fallback for any remaining absolute path to generated source.
+	formatted = submissionPathRegex.ReplaceAllString(formatted, "solution.c")
+	return formatted
+}
+
+func formatRuntimeOutput(output string) string {
+	lines := strings.Split(output, "\n")
+	formatted := make([]string, 0, len(lines))
+	for _, raw := range lines {
+		line := strings.TrimSpace(raw)
+		if line == "" {
+			continue
+		}
+
+		if matches := harnessLineRegex.FindStringSubmatch(line); len(matches) == 4 {
+			formatted = append(formatted, fmt.Sprintf("CASE %s | %s | %s", matches[1], matches[2], matches[3]))
+			continue
+		}
+		if matches := harnessSummaryLineRegex.FindStringSubmatch(line); len(matches) == 3 {
+			formatted = append(formatted, fmt.Sprintf("SUMMARY: %s/%s", matches[1], matches[2]))
+			continue
+		}
+
+		formatted = append(formatted, line)
+	}
+	return strings.Join(formatted, "\n")
 }
 
 func truncateOutput(output string) string {

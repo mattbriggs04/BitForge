@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -51,28 +50,28 @@ func NewSubmissionService(
 func (s *SubmissionService) Create(ctx context.Context, input CreateSubmissionInput) (*CreateSubmissionOutput, error) {
 	problemSlug := strings.TrimSpace(input.ProblemSlug)
 	if problemSlug == "" {
-		return nil, errors.New("problemSlug is required")
+		return nil, newInvalidError("problemSlug is required")
 	}
 	language := strings.ToLower(strings.TrimSpace(input.Language))
 	if language == "" {
 		language = "c"
 	}
 	if language != "c" {
-		return nil, fmt.Errorf("language %q is not supported yet", language)
+		return nil, newUnsupportedError(fmt.Sprintf("language %q is not supported yet", language))
 	}
 	mode := strings.ToLower(strings.TrimSpace(input.Mode))
 	if mode == "" {
 		mode = "submit"
 	}
 	if mode != "run" && mode != "submit" {
-		return nil, errors.New("mode must be either run or submit")
+		return nil, newInvalidError("mode must be either run or submit")
 	}
 	source := strings.TrimSpace(input.SourceCode)
 	if source == "" {
-		return nil, errors.New("sourceCode is required")
+		return nil, newInvalidError("sourceCode is required")
 	}
 	if len(source) > 300_000 {
-		return nil, errors.New("sourceCode exceeds maximum size")
+		return nil, newInvalidError("sourceCode exceeds maximum size")
 	}
 
 	problem, err := s.problems.GetBySlug(ctx, problemSlug)
@@ -80,7 +79,7 @@ func (s *SubmissionService) Create(ctx context.Context, input CreateSubmissionIn
 		return nil, fmt.Errorf("load problem: %w", err)
 	}
 	if problem == nil {
-		return nil, errors.New("problem not found")
+		return nil, newNotFoundError("problem not found")
 	}
 
 	starter, err := s.problems.GetStarterCode(ctx, problem.ID, language)
@@ -88,7 +87,7 @@ func (s *SubmissionService) Create(ctx context.Context, input CreateSubmissionIn
 		return nil, fmt.Errorf("load language template: %w", err)
 	}
 	if starter == "" {
-		return nil, fmt.Errorf("problem %q does not support language %q", problemSlug, language)
+		return nil, newUnsupportedError(fmt.Sprintf("problem %q does not support language %q", problemSlug, language))
 	}
 
 	userHandle := strings.TrimSpace(input.UserHandle)
