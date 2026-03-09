@@ -1,0 +1,15 @@
+# env
+.env
+
+# macOS
+.DS_Store
+
+# node
+node_modules
+.next
+
+# go
+bin/
+
+# logs
+*.log
