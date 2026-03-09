@@ -1,64 +1,87 @@
-import Image from "next/image";
+import Link from "next/link";
+import { SiteHeader } from "@/components/site-header";
+
+const tracks = [
+  {
+    title: "Embedded C",
+    description:
+      "Pointer-heavy libc reimplementations, memory-safe APIs, and firmware-grade boundary handling.",
+  },
+  {
+    title: "Networking",
+    description:
+      "Packet parsing, protocol field extraction, endian correctness, and defensive parser design.",
+  },
+  {
+    title: "Debugging",
+    description:
+      "Reason about buggy C implementations, diagnose UB patterns, and isolate state-machine failures.",
+  },
+  {
+    title: "Security",
+    description:
+      "Low-level memory behavior, integer edge cases, and exploit-adjacent defensive coding practice.",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <div className="site-root">
+      <SiteHeader />
+      <main>
+        <section className="hero-section">
+          <div className="container hero-grid">
+            <div>
+              <p className="eyebrow">Firmware and Systems Interview Prep</p>
+              <h1>Practice real low-level engineering problems, not generic algorithm drills.</h1>
+              <p className="hero-copy">
+                BitForge is built for firmware, embedded, networking, and security candidates who need
+                production-minded C exercises and interview-style feedback.
+              </p>
+              <div className="hero-actions">
+                <Link className="btn btn-primary" href="/problems">
+                  Start Practicing
+                </Link>
+                <a className="btn btn-muted" href="#tracks">
+                  Explore Tracks
+                </a>
+              </div>
+            </div>
+            <div className="hero-panel">
+              <p className="hero-panel-title">Current Problem Types</p>
+              <ul>
+                <li>C library reimplementation</li>
+                <li>Ring buffer state transitions</li>
+                <li>Packet header parsing</li>
+                <li>Pointer/memory reasoning</li>
+                <li>Debugging interview snippets</li>
+              </ul>
+              <p className="hero-panel-note">
+                Hidden tests stay server-side. Runner architecture is designed for future sandbox hardening.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="tracks" className="section section-tracks">
+          <div className="container">
+            <div className="section-head">
+              <h2>Systems-Focused Tracks</h2>
+              <p>
+                Problems are classified by practical low-level domains so you can train for the interviews you
+                actually want.
+              </p>
+            </div>
+            <div className="track-grid">
+              {tracks.map((track) => (
+                <article key={track.title} className="track-card">
+                  <h3>{track.title}</h3>
+                  <p>{track.description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   );

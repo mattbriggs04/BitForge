@@ -1,0 +1,32 @@
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/matthew/bitforge/backend/internal/config"
+	"github.com/matthew/bitforge/backend/internal/db"
+)
+
+func main() {
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("load config: %v", err)
+	}
+
+	ctx := context.Background()
+	postgres, err := db.OpenPostgres(ctx, cfg.DatabaseURL)
+	if err != nil {
+		log.Fatalf("connect postgres: %v", err)
+	}
+	defer postgres.Close()
+
+	if err := db.RunMigrations(ctx, postgres); err != nil {
+		log.Fatalf("run migrations: %v", err)
+	}
+	if err := db.SeedMVP(ctx, postgres); err != nil {
+		log.Fatalf("seed data: %v", err)
+	}
+
+	log.Printf("seed complete")
+}
