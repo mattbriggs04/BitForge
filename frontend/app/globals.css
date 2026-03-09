@@ -254,6 +254,16 @@ p {
   padding-bottom: 4rem;
 }
 
+.problem-page-full {
+  padding-top: 2rem;
+  padding-bottom: 0;
+}
+
+.problem-page-shell {
+  width: min(1360px, calc(100% - 2rem));
+  margin: 0 auto 0.85rem;
+}
+
 .catalog-header,
 .problem-page-head {
   display: flex;
@@ -321,9 +331,25 @@ select {
   flex-direction: column;
 }
 
-.card-cta {
-  margin-top: auto;
-  align-self: flex-start;
+.problem-card-link {
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.problem-card-link:hover {
+  transform: translateY(-2px);
+  border-color: rgba(151, 196, 176, 0.58);
+  background: rgba(18, 34, 48, 0.95);
+  box-shadow: 0 12px 28px rgba(2, 8, 12, 0.32);
+}
+
+.problem-card-link:focus-visible {
+  outline: 2px solid #7ae9bc;
+  outline-offset: 2px;
 }
 
 .badge,
@@ -507,16 +533,29 @@ select {
   font-size: 0.76rem;
 }
 
-.problem-workspace {
-  display: grid;
-  grid-template-columns: minmax(340px, 0.95fr) minmax(540px, 1.4fr);
-  gap: 1rem;
-  align-items: start;
+.problem-workspace-container {
+  width: 100%;
+  padding: 0 0.95rem 1.25rem;
+}
+
+.problem-workspace-resizable {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-height: calc(100vh - 210px);
 }
 
 .problem-panel-left {
   padding: 0;
-  overflow: hidden;
+  overflow: auto;
+  min-width: 280px;
+  max-width: 78%;
+  margin: 0;
+}
+
+.problem-panel-left .sample-grid,
+.problem-panel-left .asset-grid {
+  grid-template-columns: 1fr;
 }
 
 .problem-pane-section {
@@ -527,19 +566,77 @@ select {
   border-top: 1px solid rgba(112, 145, 164, 0.26);
 }
 
+.problem-pane-divider {
+  width: 14px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: col-resize;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.problem-pane-divider span {
+  width: 4px;
+  height: 58px;
+  border-radius: 999px;
+  background: rgba(131, 165, 182, 0.46);
+  transition: 150ms ease;
+}
+
+.problem-pane-divider:hover span,
+.problem-pane-divider.is-dragging span {
+  background: #79e7bb;
+}
+
+.problem-pane-divider:focus-visible {
+  outline: 2px solid #7ae9bc;
+  outline-offset: -2px;
+}
+
+.problem-pane-right {
+  flex: 1;
+  min-width: 0;
+  padding-right: 0.2rem;
+}
+
 @media (max-width: 1024px) {
   .hero-grid,
   .catalog-filters,
   .problem-grid,
   .sample-grid,
   .asset-grid,
-  .result-overview,
-  .problem-workspace {
+  .result-overview {
     grid-template-columns: 1fr;
   }
 
   .catalog-filters {
     gap: 0.62rem;
+  }
+
+  .problem-workspace-container {
+    padding: 0 0.5rem 1rem;
+  }
+
+  .problem-workspace-resizable {
+    display: block;
+    min-height: 0;
+  }
+
+  .problem-panel-left {
+    width: 100% !important;
+    max-width: 100%;
+    margin-bottom: 0.8rem;
+  }
+
+  .problem-pane-divider {
+    display: none;
+  }
+
+  .problem-pane-right {
+    padding-right: 0;
   }
 }
 

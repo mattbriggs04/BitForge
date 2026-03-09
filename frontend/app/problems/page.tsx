@@ -80,7 +80,7 @@ export default async function ProblemsPage({ searchParams }: PageProps) {
             <article className="empty-state">No problems matched your filter set.</article>
           ) : (
             problems.map((problem: ProblemSummary) => (
-              <article key={problem.id} className="problem-card">
+              <Link key={problem.id} href={`/problems/${problem.slug}`} className="problem-card problem-card-link">
                 <div className="problem-card-head">
                   <span className={difficultyClass(problem.difficulty)}>{problem.difficulty}</span>
                   <span className="badge badge-category">{problem.category}</span>
@@ -94,10 +94,7 @@ export default async function ProblemsPage({ searchParams }: PageProps) {
                     </span>
                   ))}
                 </div>
-                <Link href={`/problems/${problem.slug}`} className="btn btn-muted card-cta">
-                  Open Problem
-                </Link>
-              </article>
+              </Link>
             ))
           )}
         </section>
